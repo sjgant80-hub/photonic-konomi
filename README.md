@@ -61,6 +61,5 @@ node --test        # the four claims against their falsifiable examples
 
 ---
 
-*Built on the **Konomi architecture**, created by **Thomas Frumkin**
-([konomi-systems.com](https://konomi-systems.com)) — lineage Thomas → Jim → Simon. The estate
+*Built on the **Konomi architecture**, created by **Thomas Frumkin**. The estate
 builds WITH Konomi. MIT.*
