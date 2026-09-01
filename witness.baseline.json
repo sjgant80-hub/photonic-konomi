@@ -1,0 +1,32 @@
+[
+  {
+    "line": 131,
+    "mutation": "< → <=",
+    "snippet": "for (let i = 0; i < phases.length; i++) for (let j = i + 1; j < phases.length; j++) {",
+    "reason": "equivalent by unreachability: the mutated outer-loop boundary adds only the i=length iteration, whose inner loop starts at j=length+1 and never executes — no comparison ever runs"
+  },
+  {
+    "line": 161,
+    "mutation": "< → <=",
+    "snippet": "if (p.power < 1e-12) return { ok: false, why: 'nothing to collapse — the state carries no ",
+    "reason": "float measure-zero: < vs <= differ only when total power equals 1e-12 to the exact bit — no physically constructed state lands on that float"
+  },
+  {
+    "line": 165,
+    "mutation": "< → <=",
+    "snippet": "for (let k = 0; k < state.length; k++) {",
+    "reason": "the loop bound guards a float-rounding safety net: the Born accumulator mathematically reaches total power before k=length for every state (r = frac·P with frac<1), so the extra iteration is reachable only if rounding drops the sum below r — the fallback below exists for exactly that event"
+  },
+  {
+    "line": 168,
+    "mutation": "< → <=",
+    "snippet": "if (r < acc) return { ok: true, mode: k, probability: (re * re + im * im) / p.power };",
+    "reason": "float measure-zero: < vs <= differ only when the draw r equals the running accumulator to the exact bit"
+  },
+  {
+    "line": 170,
+    "mutation": "- 1 → + 1",
+    "snippet": "const last = state.length - 1;",
+    "reason": "dead-safety arithmetic: this fallback line executes only in the float-rounding tail described at L165; mutating which mode the safety net returns cannot be reached by any deterministic test without forging rounding itself"
+  }
+]

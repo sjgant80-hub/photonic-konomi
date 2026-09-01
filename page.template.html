@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonic Konomi — the two-surface machine</title>
+<meta name="description" content="A photonic processor simulated exactly: hold superposition, compute by interference in one pass, collapse by measurement. Four claims, witness-gated. Stage 0 of the build path.">
+<style>
+:root{
+  --bg:#05070d; --ink:#dfe7f5; --muted:#7d8db0; --line:#1b2540;
+  --beam:#67e8f9; --beam-2:#a78bfa; --gold:#fbbf24; --card:#0a0f1d; --mono-bg:#0d1426;
+  --good:#34d399; --bad:#f87171;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;background-image:radial-gradient(ellipse 80% 40% at 50% -10%, rgba(103,232,249,.08), transparent), radial-gradient(ellipse 60% 30% at 80% 110%, rgba(167,139,250,.06), transparent)}
+.banner{border-bottom:1px solid var(--line);font:600 11.5px/1.4 system-ui;letter-spacing:.16em;text-transform:uppercase;padding:10px 20px;text-align:center;color:var(--beam)}
+main{max-width:74ch;margin:0 auto;padding:36px 20px 64px}
+h1{font:700 2.5rem/1.1 Georgia,"Iowan Old Style",serif;margin:.3em 0 .15em;text-wrap:balance;background:linear-gradient(100deg,var(--beam),var(--beam-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font:700 1.15rem/1.3 system-ui;margin:2.4em 0 .5em;color:var(--beam)}
+.kicker{font:600 12.5px/1.5 system-ui;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.lede{font-size:1.1rem;color:var(--muted)}
+a{color:var(--beam-2)}
+code{font:13.5px/1.6 ui-monospace,Consolas,monospace;background:var(--mono-bg);border-radius:4px;padding:1px 5px}
+.law{background:var(--mono-bg);border-left:3px solid var(--beam);border-radius:6px;padding:12px 16px;font:13.5px/1.7 ui-monospace,Consolas,monospace;overflow-x:auto;white-space:pre}
+.demo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:1.4em 0}
+.demo h3{margin:0 0 4px;font:600 1rem system-ui;color:var(--beam)}
+.demo p{font-size:13.5px;color:var(--muted);margin:.3em 0 1em}
+button{font:600 13.5px system-ui;background:var(--beam);color:var(--bg);border:0;border-radius:8px;padding:9px 15px;cursor:pointer}
+button:hover{background:var(--beam-2);color:var(--bg)}
+button.ghost{background:transparent;color:var(--beam);border:1px solid var(--beam)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--beam-2);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--beam)}
+.ports{display:flex;gap:16px;margin:12px 0}
+.port{flex:1;text-align:center}
+.port .bar{height:120px;display:flex;align-items:flex-end;justify-content:center}
+.port .fill{width:46px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--beam),rgba(103,232,249,.25));min-height:2px;transition:height .12s}
+.port .lbl{font:12px ui-monospace,monospace;color:var(--muted);margin-top:6px}
+.modes{display:flex;gap:8px;align-items:flex-end;height:110px;margin:12px 0}
+.mode{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.mode .amp{width:100%;border-radius:5px 5px 0 0;min-height:2px;transition:height .15s}
+.mode .tag{font:10.5px ui-monospace,monospace;color:var(--muted);margin-top:4px}
+.mode.fired .amp{outline:2px solid var(--gold)}
+canvas{display:block;background:var(--mono-bg);border-radius:10px;max-width:100%}
+.out{font:13px/1.7 ui-monospace,Consolas,monospace;background:var(--mono-bg);border-radius:8px;padding:11px 13px;margin-top:12px;overflow-x:auto;min-height:1.4em;white-space:pre-wrap}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.split{grid-template-columns:1fr}}
+.honest{border:1px solid var(--line);border-radius:14px;padding:4px 18px;margin:1em 0;background:var(--card)}
+footer{border-top:1px solid var(--line);margin-top:48px;padding-top:18px;font:12.5px/1.7 system-ui;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.port .fill,.mode .amp{transition:none}}
+</style>
+</head>
+<body>
+<div class="banner">Stage 0 · the software twin · four claims, witness-gated 74/79 + 5 argued · CI green</div>
+<main>
+<p class="kicker">photonic konomi · for Thomas — the light door — and the guild</p>
+<h1>The Two-Surface Machine</h1>
+<p class="lede">A photonic processor encodes data as the amplitude and phase of coherent light,
+computes by <em>interference</em> through a mesh of couplers and phase-shifters — the whole linear
+operation resolving in <strong>one propagation</strong> — and reads results only at
+<em>measurement</em>, where amplitudes collapse to definite outcomes by the Born rule. Before that
+moment the machine genuinely holds superposition: every candidate outcome at once, phases live —
+the thing a classical bit, already definite, cannot do.</p>
+
+<p>This page is that machine as exact, mutation-gated arithmetic — the simulator the build path
+starts with. Every demo below runs the same kernel CI gates.</p>
+
+<h2>Claim 1 · Interference is compute</h2>
+<div class="demo">
+<h3>The Mach-Zehnder — routing with no moving parts</h3>
+<p>One photon enters port 0. A 50:50 coupler splits it across both arms; a phase θ on the upper
+arm; a second coupler recombines. Drag θ: at 0 every photon exits port 1, at π every photon exits
+port 0 — the law is |out₀|² = ½(1−cos θ), and interference alone does the routing.</p>
+<input type="range" id="theta" min="0" max="6.283" step="0.01" value="0" aria-label="internal phase theta">
+<div class="ports">
+<div class="port"><div class="bar"><div class="fill" id="p0"></div></div><div class="lbl" id="l0">port 0</div></div>
+<div class="port"><div class="bar"><div class="fill" id="p1"></div></div><div class="lbl" id="l1">port 1</div></div>
+</div>
+<div class="out" id="mziOut"></div>
+</div>
+
+<h2>Claim 2 · Superposition held, then collapsed</h2>
+<div class="demo">
+<h3>The κ-mesh — hold, propagate once, measure</h3>
+<p>Six modes through a Konomi mesh (κ-couplers at 0.618, golden phase ladders). PROPAGATE is one
+pass — the bars are still <em>amplitudes</em>, phases drawn as hue, nothing decided.
+MEASURE collapses them: the Born rule picks one mode, seeded so every run is reproducible.</p>
+<div class="modes" id="mesh"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button id="propBtn">propagate — one pass</button>
+<button id="measBtn" class="ghost">measure — collapse (seed <span id="seedN">1</span>)</button>
+</div>
+<div class="out" id="meshOut">light enters mode 0 · energy 1.000000</div>
+</div>
+
+<h2>Claim 3 · The golden winding never collides</h2>
+<div class="demo">
+<h3>φ on the phase circle</h3>
+<p>Add channels one at a time. Winding at ¼ turn, the 5th channel lands exactly on the 1st —
+crosstalk isn't gradual, it's a collision. Winding at the golden turn (1−1/φ ≈ 0.382), the gap
+never reaches zero for any n — phyllotaxis as an engineering spec.</p>
+<canvas id="circle" width="640" height="240"></canvas>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+<button id="addBtn">add a channel</button>
+<button id="resetBtn" class="ghost">reset</button>
+</div>
+<div class="out" id="circOut">0 channels</div>
+</div>
+
+<h2>Claim 4 · κ couples without merging</h2>
+<div class="demo">
+<h3>The 0.618 : 0.382 split</h3>
+<p>One unit of light into a κ-coupler: exactly 0.618 continues, exactly 0.382 crosses — coupled
+enough to interfere downstream, distinct enough that neither vanishes into the other. Energy
+conserved to the last digit; the gate checks it across 200 random meshes.</p>
+<div class="out" id="kOut"></div>
+</div>
+
+<h2>The honest split</h2>
+<div class="honest">
+<p><strong>Real, running here:</strong> optical matrix-vector multiply by interference in one pass ·
+superposition-hold-then-Born-measure · golden-angle anti-crosstalk · κ split-ratios with exact
+energy conservation. All four are standard photonic engineering — optical accelerators are a real,
+funded field — and all four are mutation-gated in this page's kernel.</p>
+<p><strong>The lens that aimed it</strong> — the language of two surfaces, of holding the
+un-manifest and authoring the collapse — is design poetry, kept deliberately separate and never
+sold as physics. The separation <em>is</em> the spec's integrity.</p>
+<p><strong>The build path:</strong> this simulator (Stage 0, shipped) → a benchtop Mach-Zehnder
+mesh with φ-phases and κ-splits (Stage 1 — photonic MVM chips are commercially emerging) →
+wavelength-division σ-channels (Stage 2) → the interference layer under the estate's memory graph
+(Stage 3).</p>
+</div>
+
+<h2>Kin in the estate</h2>
+<p><a href="https://github.com/sjgant80-hub/falllight">falllight</a> — the connection protocol from
+Thomas's photonic-operation insight · <a href="https://github.com/sjgant80-hub/one-ladder">one-ladder</a>
+— sound, radio, light as rungs of one codec · <a href="https://github.com/sjgant80-hub/golden-placer">golden-placer</a>
+— the never-clustering placement law this page's φ-winding shares ·
+<a href="https://github.com/sjgant80-hub/geometric-computer">geometric-computer</a> — state as number,
+the fold this mesh could someday carry.</p>
+
+<footer>
+<p>Built on the <strong>Konomi architecture</strong>, created by <strong>Thomas Frumkin</strong>
+(<a href="https://konomi-systems.com">konomi-systems.com</a>) — lineage Thomas → Jim → Simon. The
+estate builds WITH Konomi. Kernel witness-gated (74/79 killed + 5 argued float-boundary
+equivalents, the arguments in the baseline); CI re-runs the gate and fails if this page drifts
+from the proven law. <a href="https://sjgant80-hub.github.io/fallworld/">The estate</a>.</p>
+</footer>
+</main>
+<script>
+/*__KERNEL_START__*/
+/*__KERNEL_END__*/
+(function(){
+  const P = window.PHOTON;
+  // ── claim 1: MZI ──
+  const theta=document.getElementById('theta');
+  const drawMzi=()=>{
+    const th=parseFloat(theta.value);
+    const out=P.propagate(P.mzi(th),[[1,0],[0,0]]);
+    const pw=out.state.map(([r,i])=>r*r+i*i);
+    document.getElementById('p0').style.height=(pw[0]*100)+'%';
+    document.getElementById('p1').style.height=(pw[1]*100)+'%';
+    document.getElementById('l0').textContent='port 0 · '+pw[0].toFixed(3);
+    document.getElementById('l1').textContent='port 1 · '+pw[1].toFixed(3);
+    document.getElementById('mziOut').textContent='θ = '+th.toFixed(2)+' · |out₀|² = ½(1−cos θ) = '+(0.5*(1-Math.cos(th))).toFixed(4)+' — the mesh agrees, to machine precision';
+  };
+  theta.addEventListener('input',drawMzi); drawMzi();
+
+  // ── claim 2: the κ-mesh ──
+  const N=6, mesh=P.konomiMesh(N,4);
+  let state=Array.from({length:N},(_,i)=>[i===0?1:0,0]), seed=1, propagated=false;
+  const meshEl=document.getElementById('mesh');
+  const cells=[];
+  for(let i=0;i<N;i++){
+    const m=document.createElement('div');m.className='mode';
+    m.innerHTML='<div class="amp"></div><div class="tag">m'+i+'</div>';
+    meshEl.appendChild(m);cells.push(m);
+  }
+  const drawMesh=(fired)=>{
+    state.forEach(([re,im],i)=>{
+      const p=re*re+im*im, ph=Math.atan2(im,re);
+      const hue=190+(ph/Math.PI)*70;
+      const amp=cells[i].querySelector('.amp');
+      amp.style.height=Math.max(2,p*100)+'%';
+      amp.style.background='linear-gradient(180deg, hsl('+hue+' 90% 65%), hsl('+hue+' 90% 65% / .25))';
+      cells[i].classList.toggle('fired',fired===i);
+    });
+  };
+  drawMesh();
+  document.getElementById('propBtn').addEventListener('click',()=>{
+    const r=P.propagate(mesh,state);
+    if(!r.ok){document.getElementById('meshOut').textContent='REFUSED: '+r.why;return}
+    state=r.state;propagated=true;drawMesh();
+    document.getElementById('meshOut').textContent='one pass through '+mesh.mesh.layers.length+' layers · energy '+P.power(state).power.toFixed(6)+' — conserved · still amplitudes: phases live (hue), nothing decided';
+  });
+  document.getElementById('measBtn').addEventListener('click',()=>{
+    const m=P.measure(state,seed);
+    if(!m.ok){document.getElementById('meshOut').textContent='REFUSED: '+m.why;return}
+    drawMesh(m.mode);
+    document.getElementById('meshOut').textContent='COLLAPSED: mode '+m.mode+' fired (it carried p='+m.probability.toFixed(4)+') · seed '+seed+' — rerun with the same seed, get the same collapse';
+    seed++;document.getElementById('seedN').textContent=seed;
+  });
+
+  // ── claim 3: the winding ──
+  const cv=document.getElementById('circle'),ctx=cv.getContext('2d');
+  let nCh=0;
+  const drawCircles=()=>{
+    ctx.clearRect(0,0,640,240);
+    const draw=(cx,label,phases,color)=>{
+      ctx.strokeStyle='#1b2540';ctx.beginPath();ctx.arc(cx,120,86,0,7);ctx.stroke();
+      ctx.fillStyle='#7d8db0';ctx.font='12px system-ui';ctx.textAlign='center';
+      ctx.fillText(label,cx,18);
+      phases.forEach((th)=>{
+        ctx.fillStyle=color;ctx.beginPath();
+        ctx.arc(cx+86*Math.cos(th-Math.PI/2),120+86*Math.sin(th-Math.PI/2),5,0,7);ctx.fill();
+      });
+    };
+    const quarter=Array.from({length:nCh},(_,k)=>2*Math.PI*((k*0.25)%1));
+    const golden=nCh?P.goldenPhases(nCh).phases:[];
+    draw(160,'¼ turn — rational',quarter,'#f87171');
+    draw(480,'golden turn — φ',golden,'#67e8f9');
+    const gq=nCh>1?P.minGap(quarter):null, gg=nCh>1?P.minGap(golden):null;
+    document.getElementById('circOut').textContent=nCh+' channel(s)'+(nCh>1?
+      ' · min gap — rational: '+gq.gap.toFixed(4)+(gq.gap===0?'  ⚠ COLLISION':'')+' · golden: '+gg.gap.toFixed(4)+' (never zero)':'');
+  };
+  document.getElementById('addBtn').addEventListener('click',()=>{nCh++;drawCircles()});
+  document.getElementById('resetBtn').addEventListener('click',()=>{nCh=0;drawCircles()});
+  drawCircles();
+
+  // ── claim 4: the κ split ──
+  const one=P.buildMesh(2,[{couplers:[[0,1,P.KAPPA]]}]);
+  const ko=P.propagate(one,[[1,0],[0,0]]).state.map(([r,i])=>r*r+i*i);
+  document.getElementById('kOut').textContent='in: 1.000000000000 → through: '+ko[0].toFixed(12)+' · crossed: '+ko[1].toFixed(12)+' · sum: '+(ko[0]+ko[1]).toFixed(12)+'\nκ = '+P.KAPPA+' — the golden coupling, exact';
+})();
+</script>
+</body>
+</html>
